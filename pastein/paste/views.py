@@ -36,11 +36,6 @@ class PasteView(APIView):
 
             cache.set(key, serializer.data, timeout= 2 * 60 * 60)
 
-            # view_count_key = f'{key}-view-count'
-            # view_count = cache.get(view_count_key) or 0
-
-            # cache.set(view_count_key, view_count + 1, timeout=LIVE_FOREVER)
-
             return Response(
                 status=status.HTTP_200_OK,
                 data=serializer.data
@@ -91,21 +86,30 @@ class PasteView(APIView):
 
 class PasteAnalyticsView(APIView):
     """Show analytics"""
-    def get(self, request, key):
-        view_count_key = f'{key}-view-count'
-        view_count = cache.get(view_count_key) or 0
-        if view_count:
+    def get(self, request, key=None):
+        if key:
+            view_count_key = f'{key}-view-count'
+            view_count = cache.get(view_count_key) or 0
+            if view_count:
+                return Response(
+                    data={
+                        'key': key,
+                        'view_count': view_count
+                    }
+                )
+            else:
+                return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            total = cache.get('total-hits') or 0
             return Response(
+                status=status.HTTP_200_OK,
                 data={
-                    'key': key,
-                    'view_count': view_count
+                    'total-hits' : total
                 }
             )
-        else:
-            return Response(
-               status=status.HTTP_400_BAD_REQUEST,
-            )
-        
+
 
 
         
