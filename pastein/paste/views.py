@@ -24,12 +24,6 @@ class PasteView(APIView):
         cached = cache.get(key)
 
         if cached:
-            # repeating code refactor !!!
-            view_count_key = f'{key}-view-count'
-            view_count = cache.get(view_count_key) or 0
-
-            cache.set(view_count_key, view_count + 1, timeout=LIVE_FOREVER)
-
             return Response(
                 status=status.HTTP_200_OK,
                 data=cached
@@ -40,18 +34,12 @@ class PasteView(APIView):
 
             serializer = PasteSerializer(paste)
 
-            # should be moved to analytics middleware and redis should store analytics details 
-            # periodically moved to db with a background job
-            PasteAnalytic.objects.filter(paste=paste).update(
-                view_count = F('view_count') + 1
-            )
-
             cache.set(key, serializer.data, timeout= 2 * 60 * 60)
 
-            view_count_key = f'{key}-view-count'
-            view_count = cache.get(view_count_key) or 0
+            # view_count_key = f'{key}-view-count'
+            # view_count = cache.get(view_count_key) or 0
 
-            cache.set(view_count_key, view_count + 1, timeout=LIVE_FOREVER)
+            # cache.set(view_count_key, view_count + 1, timeout=LIVE_FOREVER)
 
             return Response(
                 status=status.HTTP_200_OK,
